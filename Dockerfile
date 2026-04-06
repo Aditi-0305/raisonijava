@@ -1,14 +1,13 @@
-# Step 1: Use a base image
-FROM openjdk:17-jdk-slim
-
-# Step 2: Set the working directory in the container
+# Stage 1: Build the application
+FROM maven:3.8.5-openjdk-17 AS build
 WORKDIR /app
+COPY pom.xml .
+COPY src ./src
+RUN mvn clean package -DskipTests
 
-# Step 3: Copy the .jar file from the local target directory to the container
-ADD target/Mock_Interview_Project-0.0.1-SNAPSHOT.jar /app/app.jar
-
-# Step 4: Expose the port your Spring Boot app will run on
+# Stage 2: Create the runtime image
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+COPY --from=build /app/target/*.jar app.jar
 EXPOSE 8080
-
-# Step 5: Run the Spring Boot application
 ENTRYPOINT ["java", "-jar", "app.jar"]
